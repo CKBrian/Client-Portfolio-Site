@@ -1,7 +1,7 @@
 import HeroSection from './hero';
 import IntroSection from './intro';
 import ServicesSection from './services';
-import PortfolioSection from './projects';
+import PortfolioSection from './portfolio';
 import ContactSection from './contacts';
 import TestimonialsSection from './testimonials';
 
