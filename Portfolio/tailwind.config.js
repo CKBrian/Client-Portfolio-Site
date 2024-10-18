@@ -6,7 +6,11 @@ export default {
 
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        cream: '#F8F8F0', // You can adjust this hex code to your preferred shade of cream
+      },
+    },
   },
   plugins: [],
 }

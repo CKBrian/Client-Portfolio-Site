@@ -1,5 +1,5 @@
 import HeroSection from './hero';
-import IntroSection from './intro';
+// import IntroSection from './intro';
 import ServicesSection from './services';
 import PortfolioSection from './portfolio';
 import ContactSection from './contacts';
@@ -9,7 +9,7 @@ const HomePage = () => {
     return (
         <>
         <HeroSection/>
-        <IntroSection/>
+        {/* <IntroSection/> */}
         <ServicesSection/>
         <PortfolioSection/>
         <TestimonialsSection/>

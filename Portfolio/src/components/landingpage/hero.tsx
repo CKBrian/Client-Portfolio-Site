@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { Dialog } from '@headlessui/react';
-import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import { Github, Linkedin, Twitter } from 'lucide-react';
+'use client'
+
+import React, { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Dialog } from '@headlessui/react'
+import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
+import { Github, Linkedin, Twitter } from 'lucide-react'
 
 const navigation = [
   { name: 'Intro', href: '#intro' },
@@ -11,13 +14,167 @@ const navigation = [
   { name: 'Portfolio', href: '#portfolio' },
   { name: 'Testimonials', href: '#testimonials' },
   { name: 'Contact', href: '#contact' },
-];
+]
 
-const HeroSection: React.FC = () => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+interface Node {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  radius: number
+}
+
+const DataNodesBackground: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (canvasRef.current) {
+        const { width, height } = canvasRef.current.getBoundingClientRect()
+        setDimensions({ width, height })
+        canvasRef.current.width = width
+        canvasRef.current.height = height
+      }
+    }
+
+    handleResize()
+    window.addEventListener('resize', handleResize)
+
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    const newNodes: Node[] = []
+    for (let i = 0; i < 50; i++) {
+      newNodes.push({
+        x: Math.random() * dimensions.width,
+        y: Math.random() * dimensions.height,
+        vx: (Math.random() - 0.5) * 2,
+        vy: (Math.random() - 0.5) * 2,
+        radius: Math.random() * 3 + 1,
+      })
+    }
+    setNodes(newNodes)
+  }, [dimensions])
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    const ctx = canvas?.getContext('2d')
+
+    if (!canvas || !ctx) return
+
+    const animate = () => {
+      ctx.clearRect(0, 0, dimensions.width, dimensions.height)
+
+      nodes.forEach((node, i) => {
+        node.x += node.vx
+        node.y += node.vy
+
+        if (node.x < 0 || node.x > dimensions.width) node.vx *= -1
+        if (node.y < 0 || node.y > dimensions.height) node.vy *= -1
+
+        ctx.beginPath()
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2)
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'
+        ctx.fill()
+
+        for (let j = i + 1; j < nodes.length; j++) {
+          const otherNode = nodes[j]
+          const dx = otherNode.x - node.x
+          const dy = otherNode.y - node.y
+          const distance = Math.sqrt(dx * dx + dy * dy)
+
+          if (distance < 100) {
+            ctx.beginPath()
+            ctx.moveTo(node.x, node.y)
+            ctx.lineTo(otherNode.x, otherNode.y)
+            ctx.strokeStyle = `rgba(0, 0, 0, ${0.1 - distance / 1000})`
+            ctx.stroke()
+          }
+        }
+      })
+
+      requestAnimationFrame(animate)
+    }
+
+    animate()
+  }, [nodes, dimensions])
+
+  const handleInteraction = (event: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const rect = canvas.getBoundingClientRect()
+    const x = ((event as React.MouseEvent).clientX || (event as React.TouchEvent).touches[0].clientX) - rect.left
+    const y = ((event as React.MouseEvent).clientY || (event as React.TouchEvent).touches[0].clientY) - rect.top
+
+    setNodes(prevNodes =>
+      prevNodes.map(node => {
+        const dx = node.x - x
+        const dy = node.y - y
+        const distance = Math.sqrt(dx * dx + dy * dy)
+        if (distance < 100) {
+          const angle = Math.atan2(dy, dx)
+          const force = (100 - distance) / 10
+          return {
+            ...node,
+            vx: node.vx + Math.cos(angle) * force,
+            vy: node.vy + Math.sin(angle) * force,
+          }
+        }
+        return node
+      })
+    )
+  }
 
   return (
-    <div className="bg-white">
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      onMouseMove={handleInteraction}
+      onTouchMove={handleInteraction}
+    />
+  )
+}
+
+const AnimatedRoles: React.FC = () => {
+  const roles = ["Data Scientist", "ML Engineer", "Researcher"]
+  const [currentRole, setCurrentRole] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentRole((prev) => (prev + 1) % roles.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="h-8 overflow-hidden">
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={roles[currentRole]}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.5 }}
+          className="text-lg font-semibold text-gray-600"
+        >
+          {roles[currentRole]}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export default function LightDataNodesHeroWithProfile() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  return (
+    <div className="relative min-h-screen overflow-hidden bg-gray-50">
+      <DataNodesBackground />
+
       <header className="absolute inset-x-0 top-0 z-50">
         <nav className="flex items-center justify-between p-6 lg:px-8" aria-label="Global">
           <div className="flex lg:flex-1">
@@ -42,13 +199,13 @@ const HeroSection: React.FC = () => {
           </div>
           <div className="hidden lg:flex lg:gap-x-12">
             {navigation.map((item) => (
-              <a key={item.name} href={item.href} className="text-sm font-semibold leading-6 text-gray-900">
+              <a key={item.name} href={item.href} className="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-600">
                 {item.name}
               </a>
             ))}
           </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end">
-            <a href="#contact" className="text-sm font-semibold leading-6 text-gray-900">
+            <a href="#contact" className="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-600">
               Get in Touch <span aria-hidden="true">&rarr;</span>
             </a>
           </div>
@@ -102,7 +259,7 @@ const HeroSection: React.FC = () => {
       </header>
 
       <div className="relative isolate px-6 pt-14 lg:px-8">
-        <div
+      <div
           className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80"
           aria-hidden="true"
         >
@@ -116,44 +273,80 @@ const HeroSection: React.FC = () => {
         </div>
         <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
+            <motion.div
+              className="mb-8 flex justify-center"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              <img
+                src="https://avatars.githubusercontent.com/u/164508880?v=4"
+                alt="Shirlyne Odhiambo"
+                className="w-32 h-32 rounded-full border-4 border-white shadow-lg"
+              />
+            </motion.div>
+            <motion.h1 
+              className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+            >
               Shirlyne Odhiambo
-            </h1>
-            <div className="mt-4 flex justify-center space-x-6">
+            </motion.h1>
+            <motion.div 
+              className="mt-4 flex justify-center space-x-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+            >
               <a href="https://twitter.com/yourusername" target="_blank" rel="noopener noreferrer">
                 <span className="sr-only">Twitter</span>
-                <Twitter className="h-6 w-6 text-gray-400 hover:text-gray-500" />
+                <Twitter className="h-6 w-6 text-gray-600 hover:text-gray-900" />
               </a>
               <a href="https://www.linkedin.com/in/shirlyne-sharon-odhiambo-303678235/" target="_blank" rel="noopener noreferrer">
                 <span className="sr-only">LinkedIn</span>
-                <Linkedin className="h-6 w-6 text-gray-400 hover:text-gray-500" />
+                <Linkedin className="h-6 w-6 text-gray-600 hover:text-gray-900" />
               </a>
               <a href="https://github.com/Shirlyngit" target="_blank" rel="noopener noreferrer">
                 <span className="sr-only">GitHub</span>
-                <Github className="h-6 w-6 text-gray-400 hover:text-gray-500" />
+                <Github className="h-6 w-6 text-gray-600 hover:text-gray-900" />
               </a>
-            </div>
-            <p className="mt-6 text-lg font-semibold text-gray-600">
-              Data Scientist | ML Engineer | Researcher
-            </p>
-            <p className="mt-6 text-lg leading-8 text-gray-600">
+            </motion.div>
+            <motion.div
+              className="mt-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
+              <AnimatedRoles />
+            </motion.div>
+            <motion.p 
+              className="mt-6 text-lg leading-8 text-gray-600"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+            >
               Passionate about leveraging data to drive insights and create impactful solutions. Specializing in
               machine learning, statistical analysis, and data visualization.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
+            </motion.p>
+            <motion.div 
+              className="mt-10 flex items-center justify-center gap-x-6"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 1 }}
+            >
               <a
                 href="#contact"
                 className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
               >
                 Get in Touch
               </a>
-              <a href="#portfolio" className="text-sm font-semibold leading-6 text-gray-900">
+              <a href="#portfolio" className="text-sm font-semibold leading-6 text-gray-900 hover:text-gray-600">
                 View Portfolio <span aria-hidden="true">→</span>
               </a>
-            </div>
+            </motion.div>
           </div>
-        </div>
-        <div
+          <div
           className="absolute inset-x-0 top-[calc(100%-13rem)] -z-10 transform-gpu overflow-hidden blur-3xl sm:top-[calc(100%-30rem)]"
           aria-hidden="true"
         >
@@ -165,9 +358,8 @@ const HeroSection: React.FC = () => {
             }}
           />
         </div>
+        </div>
       </div>
     </div>
-  );
-};
-
-export default HeroSection;
+  )
+}
