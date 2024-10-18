@@ -26,7 +26,7 @@ const HeroSection: React.FC = () => {
               <img
                 className="h-8 w-auto"
                 src="/placeholder.svg"
-                alt="Logo"
+                alt="Home"
               />
             </a>
           </div>
@@ -124,11 +124,11 @@ const HeroSection: React.FC = () => {
                 <span className="sr-only">Twitter</span>
                 <Twitter className="h-6 w-6 text-gray-400 hover:text-gray-500" />
               </a>
-              <a href="https://linkedin.com/in/yourusername" target="_blank" rel="noopener noreferrer">
+              <a href="https://www.linkedin.com/in/shirlyne-sharon-odhiambo-303678235/" target="_blank" rel="noopener noreferrer">
                 <span className="sr-only">LinkedIn</span>
                 <Linkedin className="h-6 w-6 text-gray-400 hover:text-gray-500" />
               </a>
-              <a href="https://github.com/yourusername" target="_blank" rel="noopener noreferrer">
+              <a href="https://github.com/Shirlyngit" target="_blank" rel="noopener noreferrer">
                 <span className="sr-only">GitHub</span>
                 <Github className="h-6 w-6 text-gray-400 hover:text-gray-500" />
               </a>
